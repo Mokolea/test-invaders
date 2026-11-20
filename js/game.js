@@ -47,7 +47,19 @@ function reset() {
   streak = 0;
   sinceLastShot = 0;
   reloadTimer = 0;
-  startWave(); // state: "banner" -> "playing" -> ... -> "lost"
+  highlightIndex = -1;
+  startWave();
+}
+
+// States: "start" (title + high scores) -> "banner" <-> "playing"
+// -> "enterName" (score made the top ten) or "lost" -> back to "start".
+function gameOver() {
+  if (qualifiesForHighScore(score)) {
+    state = "enterName";
+    openNameEntry();
+  } else {
+    state = "lost";
+  }
 }
 
 // --- Update ---
@@ -134,7 +146,7 @@ function update(dt) {
     if (a.y + ALIEN_H >= PLAYER_Y) {
       lives--;
       if (lives <= 0) {
-        state = "lost";
+        gameOver();
       } else {
         // Restart the current wave from the top
         startWave();

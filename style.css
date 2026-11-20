@@ -12,3 +12,25 @@ canvas {
   border: 2px solid #2a2f45;
   image-rendering: pixelated;
 }
+#stage {
+  position: relative;
+}
+/* Name entry box, positioned over the canvas (see drawNameEntry in js/render.js) */
+#name-input {
+  position: absolute;
+  top: 320px; /* 318px in canvas coordinates + 2px canvas border */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  font: bold 28px "Courier New", monospace;
+  text-align: center;
+  color: #7df9ff;
+  background: #000;
+  border: 2px solid #7df9ff;
+  outline: none;
+}
+#name-input[hidden] {
+  display: none;
+}

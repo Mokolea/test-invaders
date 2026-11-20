@@ -40,9 +40,51 @@ function drawCenteredText(text, y, size, color) {
   ctx.fillText(text, W / 2, y);
 }
 
+function drawStartScreen(time) {
+  drawCenteredText("INVADERS", 80, 64, "#7df9ff");
+  drawCenteredText("HIGH SCORES", 160, 26, "#fff");
+
+  ctx.font = 'bold 22px "Courier New", monospace';
+  ctx.textBaseline = "middle";
+  for (let i = 0; i < HIGH_SCORE_COUNT; i++) {
+    const y = 205 + i * 28;
+    const entry = highScores[i];
+    ctx.fillStyle = i === highlightIndex ? "#ffe45c" : entry ? "#ccc" : "#555";
+    ctx.textAlign = "right";
+    ctx.fillText(`${i + 1}.`, 260, y);
+    ctx.textAlign = "left";
+    ctx.fillText(entry ? entry.name : "----------", 280, y);
+    ctx.textAlign = "right";
+    ctx.fillText(entry ? String(entry.score) : "-", 540, y);
+  }
+
+  if (Math.floor(time / 500) % 2 === 0) {
+    drawCenteredText("Press Enter to start", 510, 24, "#6cf08a");
+  }
+  drawCenteredText("← → move   Space fire", 555, 16, "#888");
+}
+
+function drawNameEntry() {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+  ctx.fillRect(0, 0, W, H);
+  let rank = highScores.findIndex((e) => e.score < score);
+  if (rank === -1) rank = highScores.length;
+  drawCenteredText("GAME OVER", 170, 48, "#ff5a7a");
+  drawCenteredText("NEW HIGH SCORE!", 225, 28, "#ffe45c");
+  drawCenteredText(`Score: ${score}  -  Rank ${rank + 1}`, 262, 22, "#fff");
+  drawCenteredText("Enter your name:", 298, 18, "#aaa");
+  // The HTML input (#name-input) sits at y = 318..362 here.
+  drawCenteredText("Press Enter to save", 395, 18, "#aaa");
+}
+
 function draw(time) {
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, W, H);
+
+  if (state === "start") {
+    drawStartScreen(time);
+    return;
+  }
 
   // ground line
   ctx.fillStyle = "#2a2f45";
@@ -105,6 +147,8 @@ function draw(time) {
     ctx.fillRect(0, 0, W, H);
     drawCenteredText("GAME OVER", H / 2 - 30, 48, "#ff5a7a");
     drawCenteredText(`Final score: ${score}  -  Wave ${wave}`, H / 2 + 20, 22, "#fff");
-    drawCenteredText("Press Enter to play again", H / 2 + 56, 18, "#aaa");
+    drawCenteredText("Press Enter to continue", H / 2 + 56, 18, "#aaa");
+  } else if (state === "enterName") {
+    drawNameEntry();
   }
 }

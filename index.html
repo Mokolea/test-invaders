@@ -30,8 +30,13 @@
   const H = canvas.height;
 
   // --- Configuration ---
-  const ROWS = 5;
-  const COLS = 8;
+  const BASE_ROWS = 5;           // formation size in wave 1
+  const BASE_COLS = 8;
+  const MAX_ROWS = 7;            // formation size cap for later waves
+  const MAX_COLS = 11;
+  const WAVE_SPEEDUP = 0.25;     // +25% alien speed per wave
+  const START_LIVES = 3;
+  const BANNER_TIME = 1.6;       // seconds the "WAVE n" / "LIFE LOST" banner shows
   const ALIEN_W = 36;
   const ALIEN_H = 24;
   const ALIEN_GAP_X = 24;
@@ -40,7 +45,6 @@
   const ALIEN_BASE_SPEED = 40;   // px per second at full formation
   const ALIEN_MAX_SPEED = 260;   // px per second when one alien is left
   const ROW_COLORS = ["#ff5a7a", "#ffb84d", "#ffe45c", "#6cf08a", "#5ac8ff"];
-  const ROW_POINTS = [50, 40, 30, 20, 10];
 
   const PLAYER_W = 48;
   const PLAYER_H = 18;
@@ -59,39 +63,58 @@
   // --- State ---
   let player, shots, aliens, dir, score, state, cooldown;
   let burstCount, streak, sinceLastShot, reloadTimer;
+  let lives, wave, waveTotal, bannerTimer, bannerText;
   const keys = {};
 
-  function reset() {
-    player = { x: W / 2 - PLAYER_W / 2 };
-    shots = [];
+  // Build the formation for the current wave: each wave adds a column
+  // (up to MAX_COLS) and every second wave adds a row (up to MAX_ROWS).
+  function startWave() {
+    const cols = Math.min(BASE_COLS + (wave - 1), MAX_COLS);
+    const rows = Math.min(BASE_ROWS + Math.floor((wave - 1) / 2), MAX_ROWS);
     aliens = [];
-    const blockW = COLS * ALIEN_W + (COLS - 1) * ALIEN_GAP_X;
+    shots = [];
+    const blockW = cols * ALIEN_W + (cols - 1) * ALIEN_GAP_X;
     const startX = (W - blockW) / 2;
     const startY = 70;
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
         aliens.push({
           x: startX + c * (ALIEN_W + ALIEN_GAP_X),
           y: startY + r * (ALIEN_H + ALIEN_GAP_Y),
-          row: r,
+          color: ROW_COLORS[r % ROW_COLORS.length],
+          points: (rows - r) * 10, // top row is worth the most
         });
       }
     }
+    waveTotal = aliens.length;
     dir = 1;
+    showBanner(`WAVE ${wave}`);
+  }
+
+  function showBanner(text) {
+    bannerText = text;
+    bannerTimer = BANNER_TIME;
+    state = "banner";
+  }
+
+  function reset() {
+    player = { x: W / 2 - PLAYER_W / 2 };
     score = 0;
+    lives = START_LIVES;
+    wave = 1;
     cooldown = 0;
     burstCount = 0;
     streak = 0;
     sinceLastShot = 0;
     reloadTimer = 0;
-    state = "playing"; // "playing" | "won" | "lost"
+    startWave(); // state: "banner" -> "playing" -> ... -> "lost"
   }
 
   // --- Input ---
   window.addEventListener("keydown", (e) => {
     if (["ArrowLeft", "ArrowRight", " ", "Spacebar"].includes(e.key)) e.preventDefault();
     keys[e.key] = true;
-    if (state !== "playing" && e.key === "Enter") reset();
+    if (state === "lost" && e.key === "Enter") reset();
   });
   window.addEventListener("keyup", (e) => {
     keys[e.key] = false;
@@ -101,6 +124,11 @@
 
   // --- Update ---
   function update(dt) {
+    if (state === "banner") {
+      bannerTimer -= dt;
+      if (bannerTimer <= 0) state = "playing";
+      return;
+    }
     if (state !== "playing") return;
 
     // Player movement
@@ -133,10 +161,10 @@
     for (const s of shots) s.y -= SHOT_SPEED * dt;
     shots = shots.filter((s) => s.y + SHOT_H > 0);
 
-    // Aliens: speed up as the formation shrinks
-    const total = ROWS * COLS;
-    const t = 1 - (aliens.length - 1) / (total - 1);
-    const speed = ALIEN_BASE_SPEED + (ALIEN_MAX_SPEED - ALIEN_BASE_SPEED) * t * t;
+    // Aliens: speed up as the formation shrinks, and with every wave
+    const t = 1 - (aliens.length - 1) / (waveTotal - 1);
+    const waveFactor = 1 + WAVE_SPEEDUP * (wave - 1);
+    const speed = (ALIEN_BASE_SPEED + (ALIEN_MAX_SPEED - ALIEN_BASE_SPEED) * t * t) * waveFactor;
     const dx = speed * dt * dir;
 
     let minX = Infinity, maxX = -Infinity;
@@ -160,7 +188,7 @@
         const a = aliens[j];
         if (s.x < a.x + ALIEN_W && s.x + SHOT_W > a.x &&
             s.y < a.y + ALIEN_H && s.y + SHOT_H > a.y) {
-          score += ROW_POINTS[a.row];
+          score += a.points;
           aliens.splice(j, 1);
           shots.splice(i, 1);
           break;
@@ -170,12 +198,20 @@
 
     // End conditions
     if (aliens.length === 0) {
-      state = "won";
+      wave++;
+      startWave();
       return;
     }
     for (const a of aliens) {
       if (a.y + ALIEN_H >= PLAYER_Y) {
-        state = "lost";
+        lives--;
+        if (lives <= 0) {
+          state = "lost";
+        } else {
+          // Restart the current wave from the top
+          startWave();
+          bannerText = `LIFE LOST - WAVE ${wave}`;
+        }
         return;
       }
     }
@@ -192,7 +228,7 @@
 
   function drawAlien(a, frame) {
     const x = a.x, y = a.y;
-    ctx.fillStyle = ROW_COLORS[a.row];
+    ctx.fillStyle = a.color;
     // body
     ctx.fillRect(x + 6, y + 4, ALIEN_W - 12, ALIEN_H - 10);
     ctx.fillRect(x, y + 8, ALIEN_W, 8);
@@ -244,6 +280,21 @@
     ctx.textBaseline = "top";
     ctx.fillText(`SCORE: ${score}`, 16, 16);
 
+    // Lives as small ships under the score
+    ctx.fillStyle = "#7df9ff";
+    for (let i = 0; i < lives; i++) {
+      const lx = 16 + i * 30, ly = 46;
+      ctx.fillRect(lx, ly + 4, 22, 6);
+      ctx.fillRect(lx + 3, ly + 2, 16, 2);
+      ctx.fillRect(lx + 9, ly - 1, 4, 3);
+    }
+
+    // Wave number (top center)
+    ctx.fillStyle = "#aaa";
+    ctx.textAlign = "center";
+    ctx.fillText(`WAVE ${wave}`, W / 2, 16);
+    ctx.textAlign = "left";
+
     // Ammo / reload indicator (top right)
     const pipW = 6, pipH = 14, pipGap = 4;
     const pipsX = W - 16 - MAGAZINE * (pipW + pipGap) + pipGap;
@@ -263,15 +314,14 @@
       }
     }
 
-    if (state !== "playing") {
+    if (state === "banner") {
+      const color = bannerText.startsWith("LIFE LOST") ? "#ff5a7a" : "#6cf08a";
+      drawCenteredText(bannerText, H / 2, 40, color);
+    } else if (state === "lost") {
       ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
       ctx.fillRect(0, 0, W, H);
-      if (state === "won") {
-        drawCenteredText("YOU WIN!", H / 2 - 30, 48, "#6cf08a");
-      } else {
-        drawCenteredText("GAME OVER", H / 2 - 30, 48, "#ff5a7a");
-      }
-      drawCenteredText(`Final score: ${score}`, H / 2 + 20, 22, "#fff");
+      drawCenteredText("GAME OVER", H / 2 - 30, 48, "#ff5a7a");
+      drawCenteredText(`Final score: ${score}  -  Wave ${wave}`, H / 2 + 20, 22, "#fff");
       drawCenteredText("Press Enter to play again", H / 2 + 56, 18, "#aaa");
     }
   }

@@ -51,9 +51,14 @@
   const SHOT_H = 14;
   const SHOT_SPEED = 520;
   const SHOT_COOLDOWN = 0.35;    // seconds between shots
+  const BURST_SIZE = 3;          // max shots per press of the space bar
+  const MAGAZINE = 12;           // successive shots before a forced reload
+  const RELOAD_TIME = 2.0;       // seconds of forced reload
+  const STREAK_RESET = 1.2;      // seconds without firing that reset the successive-shot count
 
   // --- State ---
   let player, shots, aliens, dir, score, state, cooldown;
+  let burstCount, streak, sinceLastShot, reloadTimer;
   const keys = {};
 
   function reset() {
@@ -75,6 +80,10 @@
     dir = 1;
     score = 0;
     cooldown = 0;
+    burstCount = 0;
+    streak = 0;
+    sinceLastShot = 0;
+    reloadTimer = 0;
     state = "playing"; // "playing" | "won" | "lost"
   }
 
@@ -84,7 +93,11 @@
     keys[e.key] = true;
     if (state !== "playing" && e.key === "Enter") reset();
   });
-  window.addEventListener("keyup", (e) => { keys[e.key] = false; });
+  window.addEventListener("keyup", (e) => {
+    keys[e.key] = false;
+    // Releasing the space bar ends the current burst
+    if (e.key === " " || e.key === "Spacebar") burstCount = 0;
+  });
 
   // --- Update ---
   function update(dt) {
@@ -97,9 +110,23 @@
 
     // Firing
     cooldown -= dt;
-    if ((keys[" "] || keys["Spacebar"]) && cooldown <= 0) {
+    sinceLastShot += dt;
+    if (reloadTimer > 0) {
+      reloadTimer = Math.max(0, reloadTimer - dt);
+    } else if (sinceLastShot > STREAK_RESET) {
+      streak = 0;
+    }
+    const firing = keys[" "] || keys["Spacebar"];
+    if (firing && cooldown <= 0 && reloadTimer <= 0 && burstCount < BURST_SIZE) {
       shots.push({ x: player.x + PLAYER_W / 2 - SHOT_W / 2, y: PLAYER_Y - SHOT_H });
       cooldown = SHOT_COOLDOWN;
+      burstCount++;
+      streak++;
+      sinceLastShot = 0;
+      if (streak >= MAGAZINE) {
+        reloadTimer = RELOAD_TIME;
+        streak = 0;
+      }
     }
 
     // Shots
@@ -216,6 +243,25 @@
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     ctx.fillText(`SCORE: ${score}`, 16, 16);
+
+    // Ammo / reload indicator (top right)
+    const pipW = 6, pipH = 14, pipGap = 4;
+    const pipsX = W - 16 - MAGAZINE * (pipW + pipGap) + pipGap;
+    if (reloadTimer > 0) {
+      ctx.fillStyle = "#ff5a7a";
+      ctx.textAlign = "right";
+      ctx.fillText("RELOADING", pipsX - 12, 16);
+      const progress = 1 - reloadTimer / RELOAD_TIME;
+      ctx.fillStyle = "#2a2f45";
+      ctx.fillRect(pipsX, 19, W - 16 - pipsX, pipH);
+      ctx.fillStyle = "#ffb84d";
+      ctx.fillRect(pipsX, 19, (W - 16 - pipsX) * progress, pipH);
+    } else {
+      for (let i = 0; i < MAGAZINE; i++) {
+        ctx.fillStyle = i < MAGAZINE - streak ? "#7df9ff" : "#2a2f45";
+        ctx.fillRect(pipsX + i * (pipW + pipGap), 19, pipW, pipH);
+      }
+    }
 
     if (state !== "playing") {
       ctx.fillStyle = "rgba(0, 0, 0, 0.6)";

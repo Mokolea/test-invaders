@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Invaders</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #0b0d17;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Courier New", monospace;
+  }
+  canvas {
+    background: #000;
+    border: 2px solid #2a2f45;
+    image-rendering: pixelated;
+  }
+</style>
+</head>
+<body>
+<canvas id="game" width="800" height="600"></canvas>
+<script>
+(() => {
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // --- Configuration ---
+  const ROWS = 5;
+  const COLS = 8;
+  const ALIEN_W = 36;
+  const ALIEN_H = 24;
+  const ALIEN_GAP_X = 24;
+  const ALIEN_GAP_Y = 18;
+  const ALIEN_STEP_DOWN = 20;
+  const ALIEN_BASE_SPEED = 40;   // px per second at full formation
+  const ALIEN_MAX_SPEED = 260;   // px per second when one alien is left
+  const ROW_COLORS = ["#ff5a7a", "#ffb84d", "#ffe45c", "#6cf08a", "#5ac8ff"];
+  const ROW_POINTS = [50, 40, 30, 20, 10];
+
+  const PLAYER_W = 48;
+  const PLAYER_H = 18;
+  const PLAYER_Y = H - 40;
+  const PLAYER_SPEED = 320;
+
+  const SHOT_W = 4;
+  const SHOT_H = 14;
+  const SHOT_SPEED = 520;
+  const SHOT_COOLDOWN = 0.35;    // seconds between shots
+
+  // --- State ---
+  let player, shots, aliens, dir, score, state, cooldown;
+  const keys = {};
+
+  function reset() {
+    player = { x: W / 2 - PLAYER_W / 2 };
+    shots = [];
+    aliens = [];
+    const blockW = COLS * ALIEN_W + (COLS - 1) * ALIEN_GAP_X;
+    const startX = (W - blockW) / 2;
+    const startY = 70;
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        aliens.push({
+          x: startX + c * (ALIEN_W + ALIEN_GAP_X),
+          y: startY + r * (ALIEN_H + ALIEN_GAP_Y),
+          row: r,
+        });
+      }
+    }
+    dir = 1;
+    score = 0;
+    cooldown = 0;
+    state = "playing"; // "playing" | "won" | "lost"
+  }
+
+  // --- Input ---
+  window.addEventListener("keydown", (e) => {
+    if (["ArrowLeft", "ArrowRight", " ", "Spacebar"].includes(e.key)) e.preventDefault();
+    keys[e.key] = true;
+    if (state !== "playing" && e.key === "Enter") reset();
+  });
+  window.addEventListener("keyup", (e) => { keys[e.key] = false; });
+
+  // --- Update ---
+  function update(dt) {
+    if (state !== "playing") return;
+
+    // Player movement
+    if (keys["ArrowLeft"]) player.x -= PLAYER_SPEED * dt;
+    if (keys["ArrowRight"]) player.x += PLAYER_SPEED * dt;
+    player.x = Math.max(0, Math.min(W - PLAYER_W, player.x));
+
+    // Firing
+    cooldown -= dt;
+    if ((keys[" "] || keys["Spacebar"]) && cooldown <= 0) {
+      shots.push({ x: player.x + PLAYER_W / 2 - SHOT_W / 2, y: PLAYER_Y - SHOT_H });
+      cooldown = SHOT_COOLDOWN;
+    }
+
+    // Shots
+    for (const s of shots) s.y -= SHOT_SPEED * dt;
+    shots = shots.filter((s) => s.y + SHOT_H > 0);
+
+    // Aliens: speed up as the formation shrinks
+    const total = ROWS * COLS;
+    const t = 1 - (aliens.length - 1) / (total - 1);
+    const speed = ALIEN_BASE_SPEED + (ALIEN_MAX_SPEED - ALIEN_BASE_SPEED) * t * t;
+    const dx = speed * dt * dir;
+
+    let minX = Infinity, maxX = -Infinity;
+    for (const a of aliens) {
+      minX = Math.min(minX, a.x + dx);
+      maxX = Math.max(maxX, a.x + dx + ALIEN_W);
+    }
+
+    if (minX < 10 || maxX > W - 10) {
+      // Hit an edge: reverse and step down
+      dir = -dir;
+      for (const a of aliens) a.y += ALIEN_STEP_DOWN;
+    } else {
+      for (const a of aliens) a.x += dx;
+    }
+
+    // Collisions: shots vs aliens
+    for (let i = shots.length - 1; i >= 0; i--) {
+      const s = shots[i];
+      for (let j = aliens.length - 1; j >= 0; j--) {
+        const a = aliens[j];
+        if (s.x < a.x + ALIEN_W && s.x + SHOT_W > a.x &&
+            s.y < a.y + ALIEN_H && s.y + SHOT_H > a.y) {
+          score += ROW_POINTS[a.row];
+          aliens.splice(j, 1);
+          shots.splice(i, 1);
+          break;
+        }
+      }
+    }
+
+    // End conditions
+    if (aliens.length === 0) {
+      state = "won";
+      return;
+    }
+    for (const a of aliens) {
+      if (a.y + ALIEN_H >= PLAYER_Y) {
+        state = "lost";
+        return;
+      }
+    }
+  }
+
+  // --- Drawing ---
+  function drawPlayer() {
+    const x = player.x, y = PLAYER_Y;
+    ctx.fillStyle = "#7df9ff";
+    ctx.fillRect(x, y + 8, PLAYER_W, PLAYER_H - 8);
+    ctx.fillRect(x + 6, y + 4, PLAYER_W - 12, 4);
+    ctx.fillRect(x + PLAYER_W / 2 - 4, y - 4, 8, 8);
+  }
+
+  function drawAlien(a, frame) {
+    const x = a.x, y = a.y;
+    ctx.fillStyle = ROW_COLORS[a.row];
+    // body
+    ctx.fillRect(x + 6, y + 4, ALIEN_W - 12, ALIEN_H - 10);
+    ctx.fillRect(x, y + 8, ALIEN_W, 8);
+    // antennae
+    ctx.fillRect(x + 8, y, 4, 4);
+    ctx.fillRect(x + ALIEN_W - 12, y, 4, 4);
+    // legs (two-frame wiggle)
+    if (frame) {
+      ctx.fillRect(x + 2, y + ALIEN_H - 6, 6, 6);
+      ctx.fillRect(x + ALIEN_W - 8, y + ALIEN_H - 6, 6, 6);
+    } else {
+      ctx.fillRect(x + 10, y + ALIEN_H - 6, 6, 6);
+      ctx.fillRect(x + ALIEN_W - 16, y + ALIEN_H - 6, 6, 6);
+    }
+    // eyes
+    ctx.fillStyle = "#000";
+    ctx.fillRect(x + 11, y + 9, 4, 4);
+    ctx.fillRect(x + ALIEN_W - 15, y + 9, 4, 4);
+  }
+
+  function drawCenteredText(text, y, size, color) {
+    ctx.fillStyle = color;
+    ctx.font = `bold ${size}px "Courier New", monospace`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, W / 2, y);
+  }
+
+  function draw(time) {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, W, H);
+
+    // ground line
+    ctx.fillStyle = "#2a2f45";
+    ctx.fillRect(0, H - 14, W, 2);
+
+    const frame = Math.floor(time / 400) % 2 === 0;
+    for (const a of aliens) drawAlien(a, frame);
+
+    ctx.fillStyle = "#fff";
+    for (const s of shots) ctx.fillRect(s.x, s.y, SHOT_W, SHOT_H);
+
+    drawPlayer();
+
+    // Score (top left)
+    ctx.fillStyle = "#fff";
+    ctx.font = 'bold 20px "Courier New", monospace';
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText(`SCORE: ${score}`, 16, 16);
+
+    if (state !== "playing") {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+      ctx.fillRect(0, 0, W, H);
+      if (state === "won") {
+        drawCenteredText("YOU WIN!", H / 2 - 30, 48, "#6cf08a");
+      } else {
+        drawCenteredText("GAME OVER", H / 2 - 30, 48, "#ff5a7a");
+      }
+      drawCenteredText(`Final score: ${score}`, H / 2 + 20, 22, "#fff");
+      drawCenteredText("Press Enter to play again", H / 2 + 56, 18, "#aaa");
+    }
+  }
+
+  // --- Main loop ---
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min((now - last) / 1000, 0.05); // clamp to avoid jumps after tab switch
+    last = now;
+    update(dt);
+    draw(now);
+    requestAnimationFrame(loop);
+  }
+
+  reset();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

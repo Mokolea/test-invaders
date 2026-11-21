@@ -3,9 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <title>Invaders</title>
+<script>
+  // Pick the theme before the first paint so the page doesn't flash.
+  // Saved choice first, then the system preference, then dark.
+  (function () {
+    var theme = null;
+    try { theme = localStorage.getItem("invaders.theme"); } catch (e) {}
+    if (theme !== "light" && theme !== "dark") {
+      theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    }
+    document.documentElement.dataset.theme = theme;
+  })();
+</script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<header id="topbar">
+  <span class="brand">INVADERS</span>
+  <button id="theme-toggle" type="button" role="switch" aria-checked="true" aria-label="Dark mode">
+    <span class="toggle-label">Dark mode</span>
+    <span class="toggle-track" aria-hidden="true"><span class="toggle-knob"></span></span>
+  </button>
+</header>
 <div id="stage">
   <canvas id="game" width="800" height="600"></canvas>
   <input id="name-input" type="text" hidden autocomplete="off" spellcheck="false" aria-label="Your name">

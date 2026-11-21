@@ -32,9 +32,41 @@ nameInput.addEventListener("keydown", (e) => {
   }
 });
 
+// --- Light/dark theme ---
+// The inline script in index.html picks the starting theme before first paint.
+const THEME_STORAGE_KEY = "invaders.theme";
+const themeToggle = document.getElementById("theme-toggle");
+
+function applyTheme(name, save) {
+  if (!PALETTES[name]) name = "dark";
+  document.documentElement.dataset.theme = name;
+  palette = PALETTES[name];
+  themeToggle.setAttribute("aria-checked", String(name === "dark"));
+  if (save) {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, name);
+    } catch (e) {
+      // Storage blocked: the theme still applies for this session.
+    }
+  }
+}
+
+themeToggle.addEventListener("click", (e) => {
+  applyTheme(palette === PALETTES.dark ? "light" : "dark", true);
+  // After a mouse click, hand the keyboard back to the game so Space fires
+  // instead of toggling again. Keyboard users (detail === 0) keep focus.
+  if (e.detail > 0) {
+    if (state === "enterName") nameInput.focus();
+    else themeToggle.blur();
+  }
+});
+
+applyTheme(document.documentElement.dataset.theme, false);
+
 // --- Game input ---
 window.addEventListener("keydown", (e) => {
   if (e.target === nameInput) return; // typing a name, not playing
+  if (e.target === themeToggle) return; // Space/Enter operate the switch
   if (state === "enterName") {
     // Focus was lost (e.g. a click elsewhere): take it back, and still let
     // Enter save the name instead of swallowing it.

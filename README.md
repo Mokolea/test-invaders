@@ -18,6 +18,8 @@ open index.html   # macOS
 | Space     | Fire                                         |
 | Enter     | Start a game, or save your name for a high score |
 
+The switch in the header toggles between dark and light themes. The choice is remembered; on first visit the game follows your system setting.
+
 ## Gameplay
 
 - **Lives:** you start with 3. You lose one when an alien reaches your row, and the same wave restarts.
@@ -33,9 +35,9 @@ The start screen shows the top ten scores. If your final score makes the list, y
 ## Project layout
 
 ```
-index.html          Page with the canvas and the name-entry input
-style.css           Page and overlay styling
-js/config.js        Canvas setup and all tuning constants
+index.html          Page with the header, theme switch, canvas and name-entry input
+style.css           Page, header and overlay styling, with light/dark colour tokens
+js/config.js        Canvas setup, tuning constants and colour palettes
 js/high-scores.js   Top-ten list and localStorage persistence
 js/game.js          Game state, waves, update loop logic, collisions
 js/render.js        All drawing (game, start screen, name entry)

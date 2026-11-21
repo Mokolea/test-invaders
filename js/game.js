@@ -21,7 +21,7 @@ function startWave() {
       aliens.push({
         x: startX + c * (ALIEN_W + ALIEN_GAP_X),
         y: startY + r * (ALIEN_H + ALIEN_GAP_Y),
-        color: ROW_COLORS[r % ROW_COLORS.length],
+        row: r % palette.rows.length, // colour index, looked up when drawing so a theme switch recolours
         points: (rows - r) * 10, // top row is worth the most
       });
     }

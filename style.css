@@ -1,15 +1,110 @@
+/* Theme tokens. The canvas colours live in PALETTES (js/config.js) and must match these. */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page-bg: #0b0d17;
+  --canvas-bg: #000;
+  --border: #2a2f45;
+  --text: #fff;
+  --muted: #aaa;
+  --accent: #7df9ff;
+  --track-off: #c5cadb;
+  --knob: #0b0d17;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --page-bg: #e9ecf4;
+  --canvas-bg: #f7f8fc;
+  --border: #c5cadb;
+  --text: #1b1f2e;
+  --muted: #555b70;
+  --accent: #00778f;
+  --track-off: #a3a8b8;
+  --knob: #fff;
+}
+
 html, body {
   margin: 0;
   height: 100%;
-  background: #0b0d17;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: var(--page-bg);
+  color: var(--text);
   font-family: "Courier New", monospace;
 }
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* Header bar above the canvas, as wide as the canvas plus its border */
+#topbar {
+  width: 804px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  background: var(--canvas-bg);
+}
+.brand {
+  font-weight: bold;
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: var(--accent);
+}
+
+/* Theme switch: a button with role="switch"; aria-checked="true" means dark */
+#theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px;
+  font: bold 14px "Courier New", monospace;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.toggle-track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--track-off);
+  transition: background 0.2s;
+}
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--knob);
+  transition: transform 0.2s;
+}
+#theme-toggle[aria-checked="true"] .toggle-track {
+  background: var(--accent);
+}
+#theme-toggle[aria-checked="true"] .toggle-knob {
+  transform: translateX(20px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .toggle-track, .toggle-knob { transition: none; }
+}
+
 canvas {
-  background: #000;
-  border: 2px solid #2a2f45;
+  display: block;
+  background: var(--canvas-bg);
+  border: 2px solid var(--border);
   image-rendering: pixelated;
 }
 #stage {
@@ -26,9 +121,9 @@ canvas {
   padding: 4px 8px;
   font: bold 28px "Courier New", monospace;
   text-align: center;
-  color: #7df9ff;
-  background: #000;
-  border: 2px solid #7df9ff;
+  color: var(--accent);
+  background: var(--canvas-bg);
+  border: 2px solid var(--accent);
   outline: none;
 }
 #name-input[hidden] {

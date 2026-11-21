@@ -24,7 +24,9 @@ nameInput.addEventListener("keydown", (e) => {
     e.preventDefault();
     return;
   }
-  if (e.key === "Enter") {
+  // isComposing: Enter that confirms an IME character (Chinese, Japanese,
+  // Korean input) must not save the name yet.
+  if (e.key === "Enter" && !e.isComposing) {
     e.preventDefault();
     submitName();
   }
@@ -34,7 +36,14 @@ nameInput.addEventListener("keydown", (e) => {
 window.addEventListener("keydown", (e) => {
   if (e.target === nameInput) return; // typing a name, not playing
   if (state === "enterName") {
-    nameInput.focus(); // focus was lost (e.g. a click elsewhere); take it back
+    // Focus was lost (e.g. a click elsewhere): take it back, and still let
+    // Enter save the name instead of swallowing it.
+    if (e.key === "Enter" && !e.repeat) {
+      e.preventDefault();
+      submitName();
+    } else {
+      nameInput.focus();
+    }
     return;
   }
   if (["ArrowLeft", "ArrowRight", " ", "Spacebar"].includes(e.key)) e.preventDefault();

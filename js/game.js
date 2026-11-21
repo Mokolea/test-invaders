@@ -3,7 +3,7 @@
 // --- State ---
 let player, shots, aliens, dir, score, state, cooldown;
 let burstCount, streak, sinceLastShot, reloadTimer;
-let lives, wave, waveTotal, bannerTimer, bannerText;
+let lives, wave, waveTotal, bannerTimer, bannerText, bannerKind;
 const keys = {};
 
 // Build the formation for the current wave: each wave adds a column
@@ -28,11 +28,13 @@ function startWave() {
   }
   waveTotal = aliens.length;
   dir = 1;
-  showBanner(`WAVE ${wave}`);
+  showBanner(`WAVE ${wave}`, "wave");
 }
 
-function showBanner(text) {
+// kind: "wave" or "lifeLost" (render.js picks the colour from it)
+function showBanner(text, kind) {
   bannerText = text;
+  bannerKind = kind;
   bannerTimer = BANNER_TIME;
   state = "banner";
 }
@@ -54,6 +56,7 @@ function reset() {
 // States: "start" (title + high scores) -> "banner" <-> "playing"
 // -> "enterName" (score made the top ten) or "lost" -> back to "start".
 function gameOver() {
+  refreshHighScores(); // check against scores saved in other tabs too
   if (qualifiesForHighScore(score)) {
     state = "enterName";
     openNameEntry();
@@ -150,7 +153,7 @@ function update(dt) {
       } else {
         // Restart the current wave from the top
         startWave();
-        bannerText = `LIFE LOST - WAVE ${wave}`;
+        showBanner(`LIFE LOST - WAVE ${wave}`, "lifeLost");
       }
       return;
     }

@@ -57,12 +57,16 @@ function highScoreRank(value) {
   return index === -1 ? highScores.length : index;
 }
 
+// Re-reads the stored list so scores saved meanwhile in another tab are
+// included. Skipped when saving fails, so the in-memory list is kept.
+function refreshHighScores() {
+  if (storageWorks) highScores = loadHighScores() || highScores;
+}
+
 // Inserts the entry and returns its rank index (-1 if it fell off the list).
 function addHighScore(name, value) {
   const cleanName = name.trim().slice(0, NAME_MAX_LENGTH) || DEFAULT_NAME;
-  // Re-read storage first so a score saved meanwhile in another tab isn't
-  // overwritten. Skipped when saving fails, so the in-memory list is kept.
-  if (storageWorks) highScores = loadHighScores() || highScores;
+  refreshHighScores(); // another tab may have saved while the name was typed
   const index = highScoreRank(value);
   highScores.splice(index, 0, { name: cleanName, score: value });
   highScores = highScores.slice(0, HIGH_SCORE_COUNT);

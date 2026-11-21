@@ -139,7 +139,7 @@ function draw(time) {
   }
 
   if (state === "banner") {
-    const color = bannerText.startsWith("LIFE LOST") ? "#ff5a7a" : "#6cf08a";
+    const color = bannerKind === "lifeLost" ? "#ff5a7a" : "#6cf08a";
     drawCenteredText(bannerText, H / 2, 40, color);
   } else if (state === "lost") {
     ctx.fillStyle = "rgba(0, 0, 0, 0.6)";

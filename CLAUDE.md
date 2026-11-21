@@ -40,7 +40,7 @@ Mechanics that span files:
 - Alien speed depends on two things: the share of the wave already destroyed (`waveTotal` is set in `startWave`) and the wave number (`WAVE_SPEEDUP`).
 - Firing rules: at most `BURST_SIZE` shots per press of the space bar, because the `keyup` handler in `main.js` resets `burstCount`. After `MAGAZINE` shots in a row (a pause longer than `STREAK_RESET` resets the count), the player can't fire for `RELOAD_TIME`. The ammo display in the top-right corner shows `streak`/`reloadTimer`.
 - Each alien carries its own `color` and `points`, set from its row in `startWave`.
-- High-score rules: a score above 0 qualifies if the list has fewer than ten entries or the score beats the 10th. A tie is placed below the older entry, so a tie with the 10th doesn't qualify. Names are trimmed and cut to 10 characters; an empty name becomes `PLAYER`. `addHighScore()` re-reads storage before inserting, so another open tab's saved score isn't overwritten (skipped once a save has failed, to keep the in-memory list).
+- High-score rules: a score above 0 qualifies if the list has fewer than ten entries or the score beats the 10th. A tie is placed below the older entry, so a tie with the 10th doesn't qualify. Names are trimmed and cut to 10 characters; an empty name becomes `PLAYER`. `gameOver()` and `addHighScore()` call `refreshHighScores()` to re-read storage, so scores saved in another open tab are counted and not overwritten (skipped once a save has failed, to keep the in-memory list).
 
 ## Git workflow
 

@@ -33,16 +33,30 @@ Constraints: plain HTML/CSS/JS, no dependencies, no web server, runs from `file:
 - After saving, the game returns to the start screen and highlights the new entry.
 - A non-qualifying game over shows "GAME OVER". Enter goes to the start screen.
 
+## Several open tabs
+
+Each tab keeps its own copy of the list in memory, but they all save to the same localStorage entry. Without care, a tab would overwrite scores that another tab saved after it loaded.
+
+- The stored list is re-read (`refreshHighScores()`) at game over, before checking whether the score qualifies, so the name prompt and the rank shown take other tabs' scores into account.
+- It is re-read again just before the new entry is inserted, in case another tab saved while the name was being typed.
+- If a save has failed (storage blocked), re-reading is skipped so the in-memory list for this session is kept.
+
+## Name entry details
+
+- An auto-repeated Space (fire key still held at game over) is ignored, so it doesn't fill the box with spaces.
+- Enter that confirms a character in an input method (Chinese, Japanese, Korean) doesn't save the name yet.
+- If the box loses focus (e.g. a click elsewhere), any key puts focus back, and Enter still saves the name.
+
 ## Implementation
 
 - New start screen (`state = "start"`): title, top ten, "Press Enter to start".
-- New `js/high-scores.js`, loaded before `game.js`: load, rank and save the list (localStorage key `invaders.highScores`).
-- `game.js`: `gameOver()` chooses between `"enterName"` and `"lost"`.
+- New `js/high-scores.js`, loaded before `game.js`: load, rank (`highScoreRank()`), refresh and save the list (localStorage key `invaders.highScores`).
+- `game.js`: `gameOver()` refreshes the list, then chooses between `"enterName"` and `"lost"`.
 - `render.js`: start screen and name-entry overlay.
 - `main.js`: name input handling. The game starts in `"start"`.
 - `index.html` / `style.css`: `#stage` wrapper and `#name-input` positioned over the canvas.
-- `CLAUDE.md` updated to describe the new file, states and rules.
+- `CLAUDE.md` and `README.md` describe the file, states and rules.
 
 ## Status
 
-Implemented and committed in `065c44b`.
+Implemented in `065c44b`. Handling for several open tabs and the name-entry fixes were added in `8763081` and `fbcd63f`.

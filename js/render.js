@@ -67,8 +67,7 @@ function drawStartScreen(time) {
 function drawNameEntry() {
   ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
   ctx.fillRect(0, 0, W, H);
-  let rank = highScores.findIndex((e) => e.score < score);
-  if (rank === -1) rank = highScores.length;
+  const rank = highScoreRank(score);
   drawCenteredText("GAME OVER", 170, 48, "#ff5a7a");
   drawCenteredText("NEW HIGH SCORE!", 225, 28, "#ffe45c");
   drawCenteredText(`Score: ${score}  -  Rank ${rank + 1}`, 262, 22, "#fff");

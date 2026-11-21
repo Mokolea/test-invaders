@@ -30,7 +30,7 @@ The five scripts in `js/` share one global scope: top-level `const`/`let`/`funct
 - `high-scores.js`: the top-ten list (`highScores`), saved to `localStorage` under `invaders.highScores`. Every storage access is wrapped in try/catch, so blocked or corrupted storage falls back to an in-memory list. Has no DOM or game-state code.
 - `game.js`: all mutable game state (`let` globals), `startWave()`, `reset()`, `gameOver()`, and `update(dt)` (movement, firing rules, collisions, wave/life transitions).
 - `render.js`: `draw(time)` and its helpers, including the start screen and the name-entry overlay. Reads state only and never changes it.
-- `main.js`: the name-entry `<input>` (`openNameEntry`/`submitName`), keyboard listeners (`keys` map) and the `requestAnimationFrame` loop. It sets `state = "start"` on load.
+- `main.js`: the name-entry `<input>` (`openNameEntry`/`submitName`), keyboard listeners (which fill the `keys` map declared in `game.js`) and the `requestAnimationFrame` loop. It sets `state = "start"` on load.
 
 State machine (`state` in `game.js`): `"start"` (title and high scores; Enter calls `reset()`) → `"banner"` (a timed "WAVE n" or "LIFE LOST" message; nothing moves) → `"playing"` → either a new wave via `startWave()` (back to `"banner"`) or `gameOver()`. `gameOver()` goes to `"enterName"` if the score makes the top ten, otherwise to `"lost"`; both lead back to `"start"`. Clearing a wave increments `wave`. An alien reaching the player's row (`PLAYER_Y`) costs a life and restarts the same wave.
 
@@ -40,7 +40,7 @@ Mechanics that span files:
 - Alien speed depends on two things: the share of the wave already destroyed (`waveTotal` is set in `startWave`) and the wave number (`WAVE_SPEEDUP`).
 - Firing rules: at most `BURST_SIZE` shots per press of the space bar, because the `keyup` handler in `main.js` resets `burstCount`. After `MAGAZINE` shots in a row (a pause longer than `STREAK_RESET` resets the count), the player can't fire for `RELOAD_TIME`. The ammo display in the top-right corner shows `streak`/`reloadTimer`.
 - Each alien carries its own `color` and `points`, set from its row in `startWave`.
-- High-score rules: a score above 0 qualifies if the list has fewer than ten entries or the score beats the 10th. A tie is placed below the older entry, so a tie with the 10th doesn't qualify. Names are trimmed and cut to 10 characters; an empty name becomes `PLAYER`.
+- High-score rules: a score above 0 qualifies if the list has fewer than ten entries or the score beats the 10th. A tie is placed below the older entry, so a tie with the 10th doesn't qualify. Names are trimmed and cut to 10 characters; an empty name becomes `PLAYER`. `addHighScore()` re-reads storage before inserting, so another open tab's saved score isn't overwritten (skipped once a save has failed, to keep the in-memory list).
 
 ## Git workflow
 

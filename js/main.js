@@ -19,6 +19,11 @@ function submitName() {
 }
 
 nameInput.addEventListener("keydown", (e) => {
+  // A space bar still held from firing auto-repeats into the box once it gets focus.
+  if (e.repeat && (e.key === " " || e.key === "Spacebar")) {
+    e.preventDefault();
+    return;
+  }
   if (e.key === "Enter") {
     e.preventDefault();
     submitName();
@@ -43,6 +48,12 @@ window.addEventListener("keyup", (e) => {
   keys[e.key] = false;
   // Releasing the space bar ends the current burst
   if (e.key === " " || e.key === "Spacebar") burstCount = 0;
+});
+// Key releases aren't reported while the window is in the background,
+// so forget held keys when it loses focus.
+window.addEventListener("blur", () => {
+  for (const k in keys) keys[k] = false;
+  burstCount = 0;
 });
 
 // --- Main loop ---

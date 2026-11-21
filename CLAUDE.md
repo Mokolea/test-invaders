@@ -44,4 +44,4 @@ Mechanics that span files:
 
 ## Git workflow
 
-Don't commit directly on `main`: create a branch, commit there, and merge into `main` (fast-forward) only when asked. Don't push unless asked.
+Commit directly on `main`; no feature branches. Don't push unless asked. The remote is `origin` (GitHub, private), and HTTPS credentials come from the macOS keychain.

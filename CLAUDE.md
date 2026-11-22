@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 "Invaders": a browser game on an 800x600 canvas. The player's ship moves with ←/→, fires with Space; waves of aliens move sideways as a block and step down at the edges. A start screen shows the top-ten high scores; Enter starts a game. A header bar above the canvas has a light/dark theme switch.
 
+`README.md` describes gameplay and controls for players; `high-score-plan.md` records the high-score design decisions and the options that were rejected.
+
 ## Constraints
 
 - Plain HTML, CSS and JavaScript only: no frameworks, libraries, dependencies or build step. The npm packages in `package.json` are dev-only lint tooling: the game must never load anything from `node_modules`.
@@ -28,9 +30,10 @@ There is no build step and no test tooling. The project is worked on from macOS,
   "/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe" --headless --disable-gpu --enable-logging=stderr --v=0 --dump-dom "file:///$(pwd -W)/index.html" 2>&1 >/dev/null | grep CONSOLE | grep -v chrome-extension://
   ```
   Node isn't installed on the Windows machine, so `npm run lint` is not available there.
-- Syntax check on macOS (uses JavaScriptCore and only parses, it doesn't run):
+- On the macOS machine, Node and Chromium-based browsers aren't installed, so neither `npm run lint` nor a headless load check is available there; use the syntax check below.
+- Syntax check on macOS (uses JavaScriptCore and only parses, it doesn't run). It reads the `<script src="js/...">` tags from `index.html`, so new scripts are included automatically, and prints the files it checked:
   ```
-  osascript -l JavaScript -e 'ObjC.import("Foundation"); var all = ["config","high-scores","game","render","main"].map(function(n){ return $.NSString.stringWithContentsOfFileEncodingError("js/"+n+".js", $.NSUTF8StringEncoding, null).js; }).join("\n"); new Function(all); "SYNTAX OK"'
+  osascript -l JavaScript -e 'ObjC.import("Foundation"); function rd(p){ return $.NSString.stringWithContentsOfFileEncodingError(p, $.NSUTF8StringEncoding, null).js; } var files = (rd("index.html").match(/<script\s+src="js\/[^"]+\.js"/g) || []).map(function(t){ return t.match(/"([^"]+)"/)[1]; }); new Function(files.map(rd).join("\n")); "SYNTAX OK: " + files.join(", ")'
   ```
 
 ## Architecture

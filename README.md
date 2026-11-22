@@ -69,3 +69,5 @@ npm run lint
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+-- Mario

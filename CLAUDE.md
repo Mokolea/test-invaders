@@ -49,7 +49,7 @@ The five scripts in `js/` share one global scope: top-level `const`/`let`/`funct
 - `render.js`: `draw(time)` and its helpers, including the start screen and the name-entry overlay. Reads state only and never changes it.
 - `main.js`: the theme switch (`applyTheme`), the name-entry `<input>` (`openNameEntry`/`submitName`), keyboard listeners (which fill the `keys` map declared in `game.js`) and the `requestAnimationFrame` loop. It sets `state = "start"` on load.
 
-Shared mutable state lives in `game.js` (game), `high-scores.js` (`highScores`, `highlightIndex`, `storageWorks`) and `config.js` (`palette`). Besides `game.js` itself, only `main.js` writes to it: input, name entry and theme.
+Shared mutable state lives in `game.js` (game), `high-scores.js` (`highScores`, `highlightIndex`, `storageWorks`) and `config.js` (`palette`). Each file writes its own state. Writes across files are few: `main.js` changes game state (`state`, `keys`, `burstCount`) for input and name entry, sets `highlightIndex` after a name is saved, and sets `palette` for the theme; `reset()` in `game.js` clears `highlightIndex`.
 
 State machine (`state` in `game.js`): `"start"` (title and high scores; Enter calls `reset()`) → `"banner"` (a timed "WAVE n" or "LIFE LOST" message; nothing moves) → `"playing"` → either a new wave via `startWave()` (back to `"banner"`) or `gameOver()`. `gameOver()` goes to `"enterName"` if the score makes the top ten, otherwise to `"lost"`; both lead back to `"start"`. Clearing a wave increments `wave`. An alien reaching the player's row (`PLAYER_Y`) costs a life and restarts the same wave.
 

@@ -14,10 +14,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-There is no build, lint or test tooling.
+There is no build, lint or test tooling, and Node is not installed. The project is worked on from both macOS and Linux; use the commands for the current platform.
 
-- Run: `open index.html` (macOS default browser).
-- Syntax check (Node is not installed; this uses macOS's JavaScriptCore and only parses, it doesn't run):
+- Run: `open index.html` (macOS) or `xdg-open index.html` (Linux).
+- Load check on Linux: headless Chromium loads the page and runs the scripts, and every uncaught error is printed as a `CONSOLE` log line. No output means the page loaded cleanly. It catches syntax errors and load-time errors such as a missing global, but not bugs that only show up during play:
+  ```
+  chromium --headless --disable-gpu --enable-logging=stderr --v=0 --dump-dom "file://$PWD/index.html" 2>&1 >/dev/null | grep CONSOLE
+  ```
+  Chromium is a snap and can't read hidden directories such as `~/.claude/...`, so check a copy only from a non-hidden path, for example a temporary folder inside the repo that you delete afterwards.
+- Syntax check on macOS (uses JavaScriptCore and only parses, it doesn't run):
   ```
   osascript -l JavaScript -e 'ObjC.import("Foundation"); var all = ["config","high-scores","game","render","main"].map(function(n){ return $.NSString.stringWithContentsOfFileEncodingError("js/"+n+".js", $.NSUTF8StringEncoding, null).js; }).join("\n"); new Function(all); "SYNTAX OK"'
   ```
@@ -45,4 +50,4 @@ Mechanics that span files:
 
 ## Git workflow
 
-Commit directly on `main`; no feature branches. Don't push unless asked. The remote is `origin` (GitHub, private), and HTTPS credentials come from the macOS keychain.
+Commit directly on `main`; no feature branches. Don't push unless asked. The remote is `origin` (GitHub, private), and HTTPS credentials come from the macOS keychain on macOS and from git's `cache` helper on Linux.

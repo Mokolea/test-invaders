@@ -7,7 +7,8 @@ A small arcade shooter for the browser. Waves of aliens march sideways as a bloc
 Open `index.html` in a browser. It works straight from the file system (`file://`), so you don't need a web server.
 
 ```sh
-open index.html   # macOS
+open index.html       # macOS
+xdg-open index.html   # Linux
 ```
 
 ## Controls

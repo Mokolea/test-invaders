@@ -64,4 +64,4 @@ Mechanics that span files:
 
 ## Git workflow
 
-Commit directly on `main`; no feature branches. Don't push unless asked. The remote is `origin` (GitHub, private), and HTTPS credentials come from the macOS keychain on macOS and from git's `cache` helper on Linux.
+Commit directly on `main`; no feature branches. Don't push unless asked. The remote is `origin` (GitHub, public, MIT license), and HTTPS credentials come from the macOS keychain on macOS and from git's `cache` helper on Linux.

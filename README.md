@@ -2,7 +2,7 @@
 
 A small arcade shooter for the browser. Waves of aliens march sideways as a block and step down at each edge of the screen; shoot them all before they reach you. It is written in plain HTML, CSS and JavaScript, with no frameworks, dependencies or build step.
 
-The idea for this project comes from the book [*Claude Code – Das Praxisbuch für Entwickler und DevOps-Teams*](https://www.rheinwerk-verlag.de/claude-code-das-praxisbuch-fuer-entwickler-und-devops-teams/) (Rheinwerk Verlag).
+The idea for this project comes from the book [*Claude Code – Das Praxisbuch für Entwickler und DevOps-Teams*](https://www.rheinwerk-verlag.de/claude-code-das-praxisbuch-fuer-entwickler-und-devops-teams/) (Rheinwerk Verlag). The code was co-authored with [Claude Code](https://claude.com/claude-code) (Claude Opus 5.5), which is credited as co-author on every commit.
 
 ## Running
 

@@ -50,6 +50,7 @@ eslint.config.mjs   ESLint setup (dev-only)
 package.json        Dev-only lint tooling; the game itself needs none of it
 CLAUDE.md           Notes for working on the code with Claude Code
 high-score-plan.md  Design plan for the high-score feature
+LICENSE             MIT license
 ```
 
 The scripts are classic `<script>` tags (not ES modules, because browsers block module scripts loaded from `file://`). They share one global scope, so they must load in the order listed in `index.html`.
@@ -64,3 +65,7 @@ The code is checked with ESLint, which needs Node.js (22 or newer). This is only
 npm install     # once
 npm run lint
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE).

@@ -1,6 +1,7 @@
 {
   "name": "invaders",
   "private": true,
+  "license": "MIT",
   "description": "Dev-only tooling (linting). The game itself has no dependencies.",
   "scripts": {
     "lint": "eslint ."

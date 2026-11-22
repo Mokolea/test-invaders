@@ -45,7 +45,7 @@ function applyTheme(name, save) {
   if (save) {
     try {
       localStorage.setItem(THEME_STORAGE_KEY, name);
-    } catch (e) {
+    } catch {
       // Storage blocked: the theme still applies for this session.
     }
   }

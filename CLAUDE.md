@@ -8,15 +8,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Constraints
 
-- Plain HTML, CSS and JavaScript only: no frameworks, libraries, dependencies or build step.
+- Plain HTML, CSS and JavaScript only: no frameworks, libraries, dependencies or build step. The npm packages in `package.json` are dev-only lint tooling: the game must never load anything from `node_modules`.
 - Do not start a web server. The game must run when `index.html` is opened directly from `file://`.
 - Because of `file://`, the scripts are **classic `<script>` tags, not ES modules** (browsers block module scripts from `file://`). Don't convert them to `import`/`export`.
 
 ## Commands
 
-There is no build, lint or test tooling, and Node is not installed. The project is worked on from both macOS and Linux; use the commands for the current platform.
+There is no build step and no test tooling. The project is worked on from both macOS and Linux; use the commands for the current platform.
 
 - Run: `open index.html` (macOS) or `xdg-open index.html` (Linux).
+- Lint: `npm install` once, then `npm run lint` (ESLint). On this Ubuntu 22.04 machine Node comes from the snap on the `22/stable` channel; newer channels need a glibc newer than 22.04's and won't start. `eslint.config.mjs` reads the `<script src="js/...">` tags in `index.html`, parses those files and declares every top-level name as a shared global (`let`/`var` writable, `const`/`function` read-only). New top-level names are picked up automatically, and a new script is linted with the shared globals once it is added to `index.html`. So `no-undef` catches misspelt cross-file names and `no-global-assign` catches assigning to another file's `const`. Because of the shared scope, `no-unused-vars` only checks names inside functions.
 - Load check on Linux: headless Chromium loads the page and runs the scripts, and every uncaught error is printed as a `CONSOLE` log line. No output means the page loaded cleanly. It catches syntax errors and load-time errors such as a missing global, but not bugs that only show up during play:
   ```
   chromium --headless --disable-gpu --enable-logging=stderr --v=0 --dump-dom "file://$PWD/index.html" 2>&1 >/dev/null | grep CONSOLE

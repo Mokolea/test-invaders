@@ -1,0 +1,14 @@
+{
+  "name": "invaders",
+  "private": true,
+  "description": "Dev-only tooling (linting). The game itself has no dependencies.",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "espree": "^11.2.0",
+    "globals": "^17.14.0"
+  }
+}

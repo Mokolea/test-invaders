@@ -43,6 +43,8 @@ js/high-scores.js   Top-ten list and localStorage persistence
 js/game.js          Game state, waves, update loop logic, collisions
 js/render.js        All drawing (game, start screen, name entry)
 js/main.js          Keyboard input, name entry, animation loop
+eslint.config.mjs   ESLint setup (dev-only)
+package.json        Dev-only lint tooling; the game itself needs none of it
 CLAUDE.md           Notes for working on the code with Claude Code
 high-score-plan.md  Design plan for the high-score feature
 ```
@@ -50,3 +52,12 @@ high-score-plan.md  Design plan for the high-score feature
 The scripts are classic `<script>` tags (not ES modules, because browsers block module scripts loaded from `file://`). They share one global scope, so they must load in the order listed in `index.html`.
 
 To change gameplay values such as speeds, lives, formation size and firing limits, edit `js/config.js`.
+
+## Linting
+
+The code is checked with ESLint, which needs Node.js (22 or newer). This is only for development; playing the game needs no installation.
+
+```sh
+npm install     # once
+npm run lint
+```

@@ -2,6 +2,8 @@
 
 A small arcade shooter for the browser. Waves of aliens march sideways as a block and step down at each edge of the screen; shoot them all before they reach you. It is written in plain HTML, CSS and JavaScript, with no frameworks, dependencies or build step.
 
+The idea for this project comes from the book [*Claude Code – Das Praxisbuch für Entwickler und DevOps-Teams*](https://www.rheinwerk-verlag.de/claude-code-das-praxisbuch-fuer-entwickler-und-devops-teams/) (Rheinwerk Verlag).
+
 ## Running
 
 Open `index.html` in a browser. It works straight from the file system (`file://`), so you don't need a web server.

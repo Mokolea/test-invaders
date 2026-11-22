@@ -41,7 +41,7 @@ There is no build step and no test tooling. The project is worked on from three 
 
 ## Architecture
 
-The five scripts in `js/` share one global scope: top-level `const`/`let`/`function` declarations in one file are visible in the others. **Load order in `index.html` matters**: `config.js` → `high-scores.js` → `game.js` → `render.js` → `main.js`.
+The scripts in `js/` share one global scope: top-level `const`/`let`/`function` declarations in one file are visible in the others. **Load order matters**: they load in the order of the `<script>` tags in `index.html`, currently `config.js` → `high-scores.js` → `game.js` → `render.js` → `main.js`. A new script must be added there; lint and the macOS syntax check pick it up from that list.
 
 - `config.js`: gets the canvas/`ctx`, defines `W`/`H`, and holds every tuning constant (alien grid size and caps, speeds, per-wave speedup, lives, shooting limits). Change gameplay numbers here. It also holds `PALETTES` (`dark`/`light`, every canvas colour) and the current `palette`.
 - `high-scores.js`: the top-ten list (`highScores`), saved to `localStorage` under `invaders.highScores`. Every storage access is wrapped in try/catch, so blocked or corrupted storage falls back to an in-memory list. Has no DOM or game-state code.

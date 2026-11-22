@@ -9,6 +9,7 @@ Open `index.html` in a browser. It works straight from the file system (`file://
 ```sh
 open index.html       # macOS
 xdg-open index.html   # Linux
+start index.html      # Windows (PowerShell or cmd)
 ```
 
 ## Controls

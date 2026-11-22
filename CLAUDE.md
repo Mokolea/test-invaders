@@ -14,15 +14,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-There is no build step and no test tooling. The project is worked on from both macOS and Linux; use the commands for the current platform.
+There is no build step and no test tooling. The project is worked on from macOS, Linux and Windows; use the commands for the current platform.
 
-- Run: `open index.html` (macOS) or `xdg-open index.html` (Linux).
-- Lint: `npm install` once, then `npm run lint` (ESLint). On this Ubuntu 22.04 machine Node comes from the snap on the `22/stable` channel; newer channels need a glibc newer than 22.04's and won't start. `eslint.config.mjs` reads the `<script src="js/...">` tags in `index.html`, parses those files and declares every top-level name as a shared global (`let`/`var` writable, `const`/`function` read-only). New top-level names are picked up automatically, and a new script is linted with the shared globals once it is added to `index.html`. So `no-undef` catches misspelt cross-file names and `no-global-assign` catches assigning to another file's `const`. Because of the shared scope, `no-unused-vars` only checks names inside functions.
+- Run: `open index.html` (macOS), `xdg-open index.html` (Linux), or `start index.html` (Windows PowerShell; in Git Bash `start "" index.html`).
+- Lint: `npm install` once, then `npm run lint` (ESLint). On the Ubuntu 22.04 machine Node comes from the snap on the `22/stable` channel; newer channels need a glibc newer than 22.04's and won't start. `eslint.config.mjs` reads the `<script src="js/...">` tags in `index.html`, parses those files and declares every top-level name as a shared global (`let`/`var` writable, `const`/`function` read-only). New top-level names are picked up automatically, and a new script is linted with the shared globals once it is added to `index.html`. So `no-undef` catches misspelt cross-file names and `no-global-assign` catches assigning to another file's `const`. Because of the shared scope, `no-unused-vars` only checks names inside functions.
 - Load check on Linux: headless Chromium loads the page and runs the scripts, and every uncaught error is printed as a `CONSOLE` log line. No output means the page loaded cleanly. It catches syntax errors and load-time errors such as a missing global, but not bugs that only show up during play:
   ```
   chromium --headless --disable-gpu --enable-logging=stderr --v=0 --dump-dom "file://$PWD/index.html" 2>&1 >/dev/null | grep CONSOLE
   ```
   Chromium is a snap and can't read hidden directories such as `~/.claude/...`, so check a copy only from a non-hidden path, for example a temporary folder inside the repo that you delete afterwards.
+- Load check on Windows: the same check with the installed Microsoft Edge, run from Git Bash (the Bash tool). Edge can print `CONSOLE` lines from its own extensions, so those are filtered out:
+  ```
+  "/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe" --headless --disable-gpu --enable-logging=stderr --v=0 --dump-dom "file:///$(pwd -W)/index.html" 2>&1 >/dev/null | grep CONSOLE | grep -v chrome-extension://
+  ```
+  Node isn't installed on the Windows machine, so `npm run lint` is not available there.
 - Syntax check on macOS (uses JavaScriptCore and only parses, it doesn't run):
   ```
   osascript -l JavaScript -e 'ObjC.import("Foundation"); var all = ["config","high-scores","game","render","main"].map(function(n){ return $.NSString.stringWithContentsOfFileEncodingError("js/"+n+".js", $.NSUTF8StringEncoding, null).js; }).join("\n"); new Function(all); "SYNTAX OK"'
